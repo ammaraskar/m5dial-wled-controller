@@ -8,9 +8,8 @@ void setup() {
     auto cfg = M5.config();
     M5Dial.begin(cfg, /*enableEncoder=*/true, /*enableRFID=*/false);
     M5Dial.Display.setTextColor(GREEN);
-    M5Dial.Display.setTextDatum(middle_center);
+    M5Dial.Display.setTextDatum(top_left);
     M5Dial.Display.setFont(&fonts::efontCN_24);
-    M5Dial.Display.setTextSize(2);
 
     M5Dial.Speaker.setAllChannelVolume(255);
 

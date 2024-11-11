@@ -2,20 +2,26 @@
 
 
 extern const uint8_t wifi_icon_start[] asm("_binary_resources_icons_wifi_png_start");
-extern const uint8_t wifi_icon_end[] asm("_binary_resources_icons_wifi_png_end");
 
 
 void SetupMenu::initialDraw() {
     _gfx.startWrite();
 
+    // Background for top banner.
+    _gfx.setColor(TFT_BROWN);
+    _gfx.writeFillRect(0, 0, _gfx.width(), 40);
+
     _gfx.setTextColor(TFT_WHITE);
+    _gfx.setColor(TFT_WHITE);
 
-    _gfx.drawString("WiFi", _gfx.width() / 2, 20);
-    _gfx.drawString("Setup", _gfx.width() / 2, 55);
+    // Wifi icon.
+    bool drawRes = _gfx.drawPng(/*data=*/wifi_icon_start, /*len=*/~0u,
+        /*x=*/(_gfx.width() / 2) - 40,
+        /*y=*/10);
 
-    ESP_LOGW("SetupMenu", "calling drawPng, len: %d", (wifi_icon_end - wifi_icon_start));
-    bool drawRes = _gfx.drawPng(wifi_icon_start, (wifi_icon_end - wifi_icon_start), _gfx.width() / 2, 60);
-    ESP_LOGW("SetupMenu", "drawPng result: %d", drawRes);
+    // Setup text beneath icon.
+    _gfx.setTextDatum(top_left);
+    _gfx.drawString("SETUP", (_gfx.width() / 2) - 9, 11);
 
     _gfx.endWrite();
 }
