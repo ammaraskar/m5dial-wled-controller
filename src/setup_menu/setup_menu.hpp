@@ -2,18 +2,18 @@
 #define SETUP_MENU_SETUP_MENU_H_
 
 #include <M5GFX.h>
+#include "../menu.hpp"
 
 
-class SetupMenu {
+class SetupMenu : public Menu {
 public:
-    SetupMenu(M5GFX& gfx) : _gfx(gfx)
+    explicit SetupMenu(M5GFX& gfx) : _gfx(gfx)
     {
-        init();
     }
 
-private:
-    void init();
+    virtual void initialDraw();
 
+private:
     M5GFX& _gfx;
 };
 

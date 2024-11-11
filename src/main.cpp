@@ -1,7 +1,8 @@
 #include "M5Dial.h"
 #include "setup_menu/setup_menu.hpp"
 
-M5Canvas canvas;
+SetupMenu setupMenu(M5Dial.Display);
+Menu& currentMenu = setupMenu;
 
 void setup() {
     auto cfg = M5.config();
@@ -16,6 +17,7 @@ void setup() {
     M5Dial.Display.fillScreen(TFT_BLACK);
 }
 
+// TODO: this should not just be a simple bool check
 bool setupDone = false;
 
 void loop() {
@@ -23,7 +25,8 @@ void loop() {
 
     // TODO: Go into first time setup if we don't have a LED configured.
     if (!setupDone) {
-        SetupMenu setupMenu(M5Dial.Display);
+        currentMenu = setupMenu;
+        currentMenu.initialDraw();
         setupDone = true;
     }
 }

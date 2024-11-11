@@ -5,7 +5,7 @@ extern const uint8_t wifi_icon_start[] asm("_binary_resources_icons_wifi_png_sta
 extern const uint8_t wifi_icon_end[] asm("_binary_resources_icons_wifi_png_end");
 
 
-void SetupMenu::init() {
+void SetupMenu::initialDraw() {
     _gfx.startWrite();
 
     _gfx.setTextColor(TFT_WHITE);
