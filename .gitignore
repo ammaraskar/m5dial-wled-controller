@@ -6,6 +6,8 @@
 .pio
 .vscode
 
+sdkconfig.*
+
 # Prerequisites
 *.d
 

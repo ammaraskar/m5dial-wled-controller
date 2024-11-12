@@ -1,31 +1,28 @@
-#include "M5Dial.h"
-#include "setup_menu/setup_menu.hpp"
+#include <M5Unified.hpp>
+#include <freertos/FreeRTOS.h>
+#include <lvgl.h>
+#include <M5Dial-LVGL.h>
+#include "setup_menu.h"
 
-SetupMenu setupMenu(M5Dial.Display);
-Menu& currentMenu = setupMenu;
+void main_task(void *)
+{
+    m5dial_lvgl_init();
 
-void setup() {
-    auto cfg = M5.config();
-    M5Dial.begin(cfg, /*enableEncoder=*/true, /*enableRFID=*/false);
-    M5Dial.Display.setTextColor(GREEN);
-    M5Dial.Display.setTextDatum(top_left);
-    M5Dial.Display.setFont(&fonts::efontCN_24);
+    // TODO: only render the setup menu on first boot/uninitialized.
+    lv_obj_t* setup = setup_menu();
+    lv_screen_load(setup);
 
-    M5Dial.Speaker.setAllChannelVolume(255);
-
-    M5Dial.Display.fillScreen(TFT_BLACK);
+    for (;;)
+    {
+        m5dial_lvgl_next();
+    }
+    vTaskDelete(nullptr);
 }
 
-// TODO: this should not just be a simple bool check
-bool setupDone = false;
-
-void loop() {
-    M5Dial.update();
-
-    // TODO: Go into first time setup if we don't have a LED configured.
-    if (!setupDone) {
-        currentMenu = setupMenu;
-        currentMenu.initialDraw();
-        setupDone = true;
+extern "C"
+{
+    void app_main()
+    {
+        xTaskCreatePinnedToCore(main_task, "main_task", 8192, nullptr, 1, nullptr, 1);
     }
 }
