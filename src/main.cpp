@@ -1,10 +1,30 @@
+// Fixes undefined reference to WinMain issue
+#ifndef SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
+#endif
+
 #include <M5Unified.hpp>
 #include <lvgl.h>
 #include <M5Dial-LVGL.h>
 #include "setup_menu.h"
+#include "wifi.h"
+
 
 void initial_setup() {
     m5dial_lvgl_init();
+    initialize_wifi_stack();  // Also initializes esp event loop.
+
+    // Register an input group so interactive stuff can be controlled by the encoder.
+    lv_group_t* group = lv_group_create();
+    lv_group_set_default(group);
+    for (lv_indev_t *indev = lv_indev_get_next(nullptr); indev != nullptr; indev = lv_indev_get_next(indev))
+    {
+        if (lv_indev_get_type(indev) == LV_INDEV_TYPE_ENCODER)
+        {
+            lv_indev_set_group(indev, group);
+            break;
+        }
+    }
 
     // TODO: only render the setup menu on first boot/uninitialized.
     lv_obj_t* setup = setup_menu();
@@ -17,7 +37,7 @@ void loop() {
 
 // Define different ways to call the above functions depending on if we're
 // running on the board or in the simulator.
-#if defined(ESP_PLATFORM)
+#ifndef SIMULATOR
 // Actual board.
 #include <freertos/FreeRTOS.h>
 
