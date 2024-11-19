@@ -73,11 +73,15 @@ uint16_t perform_wifi_network_scan() {
     memcpy(wifi_scan_results[0].ssid, "Network foo", sizeof(wifi_scan_results[0].ssid));
     memcpy(wifi_scan_results[1].ssid, "The Pearl", sizeof(wifi_scan_results[0].ssid));
     memcpy(wifi_scan_results[2].ssid, "ATTfoobar-2Ghz", sizeof(wifi_scan_results[0].ssid));
+    memcpy(wifi_scan_results[3].ssid, "A very very long long long WiFi name yup", sizeof(wifi_scan_results[0].ssid));
+    memcpy(wifi_scan_results[4].ssid, "Bar", sizeof(wifi_scan_results[0].ssid));
+    memcpy(wifi_scan_results[5].ssid, "Hello World", sizeof(wifi_scan_results[0].ssid));
+    memcpy(wifi_scan_results[6].ssid, "Woo", sizeof(wifi_scan_results[0].ssid));
 
     // sleep for a bit to simulate scanning time.
     SDL_Delay(50);
 
-    return 3;
+    return 7;
 }
 
 #endif
