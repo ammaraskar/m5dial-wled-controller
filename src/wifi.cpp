@@ -30,12 +30,21 @@ void initialize_wifi_stack() {
 
     esp_netif_t* sta_netif = esp_netif_create_default_wifi_sta();
     assert(sta_netif);
+    ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "wled-dial"));
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    // Check if there is an existing WiFi network stored.
+    wifi_config_t wifi_config = {};
+    esp_wifi_get_config(WIFI_IF_STA, &wifi_config);
+    if (wifi_config.sta.ssid[0] != 0) {
+        ESP_LOGI(TAG, "Connecting to previously stored WiFi network %s", (char*)wifi_config.sta.ssid);
+        esp_wifi_connect();
+    }
 }
 
 uint16_t perform_wifi_network_scan() {
@@ -61,6 +70,15 @@ uint16_t perform_wifi_network_scan() {
     return stored_ap_count;
 }
 
+void connect_to_wifi_network(wifi_scan_result* network, char* password) {
+    wifi_config_t wifi_config = {};
+    memcpy(wifi_config.sta.ssid, network->ssid, sizeof(wifi_config.sta.ssid));
+    memcpy(wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_connect());
+}
+
 #else
 
 #include <SDL2/SDL.h>
@@ -82,6 +100,10 @@ uint16_t perform_wifi_network_scan() {
     SDL_Delay(50);
 
     return 7;
+}
+
+void connect_to_wifi_network(wifi_scan_result* network, char* password) {
+    // no-op for now.
 }
 
 #endif

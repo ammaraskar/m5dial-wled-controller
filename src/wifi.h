@@ -15,4 +15,6 @@ typedef struct {
 uint16_t perform_wifi_network_scan();
 wifi_scan_result* get_wifi_scan_results();
 
+void connect_to_wifi_network(wifi_scan_result* network, char* password);
+
 #endif  // __WIFI_H__
