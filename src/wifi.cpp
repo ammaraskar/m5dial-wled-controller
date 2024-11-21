@@ -1,20 +1,60 @@
 #include "wifi.h"
 
-#define SCAN_SIZE_LIST 20
-wifi_scan_result wifi_scan_results[SCAN_SIZE_LIST];
-
-wifi_scan_result* get_wifi_scan_results() {
-    return wifi_scan_results;
+char qrCodeData[128];
+char* get_dpp_qrcode_data() {
+    return qrCodeData;
 }
 
 #ifndef SIMULATOR
 
+#include "esp_dpp.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include <cstring>
 
 static const char *TAG = "WiFi";
+
+static esp_err_t dpp_enrollee_bootstrap(void)
+{
+    /* Currently only supported method is QR Code */
+    return esp_supp_dpp_bootstrap_gen(/*channels=*/"6", DPP_BOOTSTRAP_QR_CODE, /*key=*/NULL, "WLED-Dial");
+}
+
+wifi_config_t s_dpp_wifi_config;
+
+static void dpp_enrollee_event_cb(esp_supp_dpp_event_t event, void *data)
+{
+    static int s_retry_num;
+
+    switch (event) {
+    case ESP_SUPP_DPP_URI_READY:
+        if (data != NULL) {
+            ESP_LOGI(TAG, "Generated qr code data: %s", (char*)data);
+            strncpy(qrCodeData, (const char*) data, 128);
+        }
+        break;
+    case ESP_SUPP_DPP_CFG_RECVD:
+        memcpy(&s_dpp_wifi_config, data, sizeof(s_dpp_wifi_config));
+        esp_wifi_set_config(WIFI_IF_STA, &s_dpp_wifi_config);
+        ESP_LOGI(TAG, "DPP Authentication successful, connecting to AP : %s",
+                 s_dpp_wifi_config.sta.ssid);
+        s_retry_num = 0;
+        esp_wifi_connect();
+        break;
+    case ESP_SUPP_DPP_FAIL:
+        if (s_retry_num < 5) {
+            ESP_LOGI(TAG, "DPP Auth failed (Reason: %s), retry...", esp_err_to_name((int)data));
+            ESP_ERROR_CHECK(esp_supp_dpp_start_listen());
+            s_retry_num++;
+        } else {
+            //xEventGroupSetBits(s_dpp_event_group, DPP_AUTH_FAIL_BIT);
+        }
+        break;
+    default:
+        break;
+    }
+}
 
 void initialize_wifi_stack() {
     // Initialize NVS
@@ -36,6 +76,8 @@ void initialize_wifi_stack() {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_supp_dpp_init(dpp_enrollee_event_cb));
+    ESP_ERROR_CHECK(dpp_enrollee_bootstrap());
     ESP_ERROR_CHECK(esp_wifi_start());
 
     // Check if there is an existing WiFi network stored.
@@ -47,63 +89,12 @@ void initialize_wifi_stack() {
     }
 }
 
-uint16_t perform_wifi_network_scan() {
-    esp_wifi_scan_start(NULL, true);
-
-    uint16_t ap_count = 0;
-
-    uint16_t stored_ap_count = SCAN_SIZE_LIST;
-    wifi_ap_record_t ap_info[SCAN_SIZE_LIST];
-    memset(ap_info, 0, sizeof(ap_info));
-
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&stored_ap_count, ap_info));
-    ESP_LOGI(TAG, "Total APs scanned = %u, actual AP number ap_info holds = %u", ap_count, stored_ap_count);
-    for (int i = 0; i < stored_ap_count; i++) {
-        ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
-        ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
-        ESP_LOGI(TAG, "Channel \t\t%d", ap_info[i].primary);
-
-        memcpy(wifi_scan_results[i].ssid, ap_info[i].ssid, sizeof(wifi_scan_results[0].ssid));
-    }
-
-    return stored_ap_count;
-}
-
-void connect_to_wifi_network(wifi_scan_result* network, char* password) {
-    wifi_config_t wifi_config = {};
-    memcpy(wifi_config.sta.ssid, network->ssid, sizeof(wifi_config.sta.ssid));
-    memcpy(wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
-
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_connect());
-}
-
 #else
 
 #include <SDL2/SDL.h>
 
 void initialize_wifi_stack() {
-    // no-op.
-}
-
-uint16_t perform_wifi_network_scan() {
-    memcpy(wifi_scan_results[0].ssid, "Network foo", sizeof(wifi_scan_results[0].ssid));
-    memcpy(wifi_scan_results[1].ssid, "The Pearl", sizeof(wifi_scan_results[0].ssid));
-    memcpy(wifi_scan_results[2].ssid, "ATTfoobar-2Ghz", sizeof(wifi_scan_results[0].ssid));
-    memcpy(wifi_scan_results[3].ssid, "A very very long long long WiFi name yup", sizeof(wifi_scan_results[0].ssid));
-    memcpy(wifi_scan_results[4].ssid, "Bar", sizeof(wifi_scan_results[0].ssid));
-    memcpy(wifi_scan_results[5].ssid, "Hello World", sizeof(wifi_scan_results[0].ssid));
-    memcpy(wifi_scan_results[6].ssid, "Woo", sizeof(wifi_scan_results[0].ssid));
-
-    // sleep for a bit to simulate scanning time.
-    SDL_Delay(50);
-
-    return 7;
-}
-
-void connect_to_wifi_network(wifi_scan_result* network, char* password) {
-    // no-op for now.
+    strcpy(qrCodeData, "dpp://xyz"); 
 }
 
 #endif
