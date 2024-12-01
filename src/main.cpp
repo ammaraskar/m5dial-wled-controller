@@ -8,6 +8,7 @@
 #include <M5Dial-LVGL.h>
 #include "setup_menu.h"
 #include "wifi.h"
+#include "wled.h"
 
 
 void initial_setup() {
@@ -29,6 +30,8 @@ void initial_setup() {
     // TODO: only render the setup menu on first boot/uninitialized.
     lv_obj_t* setup = setup_menu();
     lv_screen_load(setup);
+
+    WledController controller;
 }
 
 void loop() {

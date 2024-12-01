@@ -5,6 +5,4 @@
 
 void initialize_wifi_stack();
 
-char* get_dpp_qrcode_data();
-
 #endif  // __WIFI_H__

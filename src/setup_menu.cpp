@@ -26,16 +26,7 @@ lv_obj_t* setup_menu() {
     lv_obj_set_style_bg_opa(label, LV_OPA_100, 0);
     lv_obj_set_style_radius(label, 200, LV_PART_MAIN);
 
-    // Add a centered qr code.
-    lv_obj_t* qr = lv_qrcode_create(setup_menu);
-    lv_qrcode_set_size(qr, 165);
-    lv_qrcode_set_dark_color(qr, lv_color_white());
-    lv_qrcode_set_light_color(qr, lv_color_black());
-
-    //const char* data = "https://lvgl.io";
-    char* data = get_dpp_qrcode_data();
-    lv_qrcode_update(qr, data, strlen(data));
-    lv_obj_align(qr, LV_ALIGN_CENTER, 0, 5);
+    // TODO: add a selector for WLED instance here.
 
     return setup_menu;
 }
