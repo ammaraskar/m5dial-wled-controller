@@ -1,10 +1,5 @@
 #include "wifi.h"
 
-char qrCodeData[128];
-char* get_dpp_qrcode_data() {
-    return qrCodeData;
-}
-
 #ifndef SIMULATOR
 
 #include "esp_dpp.h"
@@ -14,6 +9,15 @@ char* get_dpp_qrcode_data() {
 #include <cstring>
 
 static const char *TAG = "WiFi";
+
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    switch(event_id) {
+        case WIFI_EVENT_STA_DISCONNECTED:
+            ESP_LOGI(TAG, "Disconnected");
+            esp_wifi_connect();
+            break;
+    }
+}
 
 void initialize_wifi_stack() {
     // Initialize NVS
@@ -31,6 +35,8 @@ void initialize_wifi_stack() {
     assert(sta_netif);
     ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "wled-dial"));
 
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
@@ -41,8 +47,9 @@ void initialize_wifi_stack() {
     wifi_config_t wifi_config = {};
 
     esp_wifi_get_config(WIFI_IF_STA, &wifi_config);
-    if (wifi_config.sta.ssid[0] != 0) {
-        ESP_LOGI(TAG, "Connecting to previously stored WiFi network %s", (char*)wifi_config.sta.ssid);
+    if (wifi_config.sta.ssid[0] != 0 && wifi_config.sta.password[0] != 0) {
+        ESP_LOGI(TAG, "Connecting to previously stored WiFi network %s with %s",
+            (char*)wifi_config.sta.ssid, (char*)wifi_config.sta.password);
         esp_wifi_connect();
     }
 }
@@ -52,7 +59,6 @@ void initialize_wifi_stack() {
 #include <SDL2/SDL.h>
 
 void initialize_wifi_stack() {
-    strcpy(qrCodeData, "dpp://xyz"); 
 }
 
 #endif
