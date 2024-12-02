@@ -29,9 +29,9 @@ void initial_setup() {
     }
 
     #ifndef SIMULATOR
-    EspWledController controller;
+    static EspWledController controller;
     #else
-    MockWledController controller;
+    static MockWledController controller;
     #endif
 
     // TODO: only render the setup menu on first boot/uninitialized.

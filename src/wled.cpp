@@ -65,4 +65,24 @@ void EspWledController::on_wled_json_data(JsonDocument& doc) {
     ESP_LOGI(TAG, "Is WLED on? %s", doc["state"]["on"] ? "on" : "off");
 }
 
+void EspWledController::turn_wled_on() {
+    const static char* payload = "{\"on\": true}";
+    esp_websocket_client_send_text(_client, payload, strlen(payload), 1000);
+    ESP_LOGI(TAG, "Sending turn on payload %s", payload);
+}
+
+void EspWledController::set_wled_brightness(int16_t brightness) {
+    JsonDocument doc;
+    doc["bri"] = brightness;
+
+    std::string payload;
+    serializeJson(doc, payload);
+
+    esp_websocket_client_send_text(_client, payload.c_str(), payload.length(), 1000);
+    ESP_LOGI(TAG, "Sending brightness payload %s", payload.c_str());
+}
+
+#else
+
+
 #endif
