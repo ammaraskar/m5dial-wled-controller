@@ -31,7 +31,11 @@ void initial_setup() {
     lv_obj_t* setup = setup_menu();
     lv_screen_load(setup);
 
-    WledController controller;
+    #ifndef SIMULATOR
+    EspWledController controller;
+    #else
+    MockWledController controller;
+    #endif
 }
 
 void loop() {
@@ -58,6 +62,8 @@ extern "C"
 {
     void app_main()
     {
+        // Pin the GUI task to core 1, as most of the ESP S3 libraries do their
+        // magic on core 0.
         xTaskCreatePinnedToCore(main_task, "main_task", 8192, nullptr, 1, nullptr, 1);
     }
 }

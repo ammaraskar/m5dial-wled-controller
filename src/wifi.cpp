@@ -39,6 +39,7 @@ void initialize_wifi_stack() {
 
     // Check if there is an existing WiFi network stored.
     wifi_config_t wifi_config = {};
+
     esp_wifi_get_config(WIFI_IF_STA, &wifi_config);
     if (wifi_config.sta.ssid[0] != 0) {
         ESP_LOGI(TAG, "Connecting to previously stored WiFi network %s", (char*)wifi_config.sta.ssid);
